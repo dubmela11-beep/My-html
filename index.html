@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#0c6b83">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>MBT POS — বারকোড ও বিলিং সিস্টেম</title>
+<script>
+  // এই ফাইলটা manifest.json/sw.js/icon ফাইলগুলোর পাশে (একই ফোল্ডারে, HTTPS হোস্টে) রাখলে
+  // এটা ইনস্টলযোগ্য অ্যাপ (PWA) হয়ে যাবে — যা PWABuilder.com দিয়ে আসল APK-তে রূপান্তর করা
+  // যায়, যেখানে ক্যামেরা নিখুঁতভাবে কাজ করে। এই ফাইলগুলো না থাকলে (যেমন সরাসরি ফোনে খোলা হলে)
+  // এই স্ক্রিপ্টটা নিরাপদে কিছুই করবে না।
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+
+<!-- বারকোড লাইব্রেরি (JsBarcode CODE128, MIT লাইসেন্স) সরাসরি এই ফাইলের ভেতরে বসানো — কোনো
+     ইন্টারনেট/CDN লাগবে না। ক্যামেরা স্ক্যানার ব্রাউজারের নিজস্ব BarcodeDetector API ব্যবহার করে
+     (কোনো লাইব্রেরি লাগে না) এবং Excel এক্সপোর্ট বিল্ট-ইন XML দিয়ে হয় — এই দুটোও তাই সম্পূর্ণ
+     অফলাইনে কাজ করবে, নেট ছাড়াই। -->
+<script>
+/*! JsBarcode v3.12.3 | (c) Johan Lindell | MIT license */
+!function(t){var e={};function n(r){if(e[r])return e[r].exports;var o=e[r]={i:r,l:!1,exports:{}};return t[r].call(o.exports,o,o.exports,n),o.l=!0,o.exports}n.m=t,n.c=e,n.d=function(t,e,r){n.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:r})},n.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},n.t=function(t,e){if(1&e&&(t=n(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var r=Object.create(null);if(n.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var o in t)n.d(r,o,function(e){return t[e]}.bind(null,o));return r},n.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return n.d(e,"a",e),e},n.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},n.p="",n(n.s=7)}([function(t,e,n){"use strict";var r;function o(t,e,n){return e in t?Object.defineProperty(t,e,{value:n,enumerable:!0,configurable:!0,writable:!0}):t[e]=n,t}Object.defineProperty(e,"__esModule",{value:!0});var i=e.SET_A=0,a=e.SET_B=1,u=e.SET_C=2,s=(e.SHIFT=98,e.START_A=103),f=e.START_B=104,c=e.START_C=105;e.MODULO=103,e.STOP=106,e.FNC1=207,e.SET_BY_CODE=(o(r={},s,i),o(r,f,a),o(r,c,u),r),e.SWAP={101:i,100:a,99:u},e.A_START_CHAR=String.fromCharCode(208),e.B_START_CHAR=String.fromCharCode(209),e.C_START_CHAR=String.fromCharCode(210),e.A_CHARS="[\0-_È-Ï]",e.B_CHARS="[ -È-Ï]",e.C_CHARS="(Ï*[0-9]{2}Ï*)",e.BARS=[11011001100,11001101100,11001100110,10010011e3,10010001100,10001001100,10011001e3,10011000100,10001100100,11001001e3,11001000100,11000100100,10110011100,10011011100,10011001110,10111001100,10011101100,10011100110,11001110010,11001011100,11001001110,11011100100,11001110100,11101101110,11101001100,11100101100,11100100110,11101100100,11100110100,11100110010,11011011e3,11011000110,11000110110,10100011e3,10001011e3,10001000110,10110001e3,10001101e3,10001100010,11010001e3,11000101e3,11000100010,10110111e3,10110001110,10001101110,10111011e3,10111000110,10001110110,11101110110,11010001110,11000101110,11011101e3,11011100010,11011101110,11101011e3,11101000110,11100010110,11101101e3,11101100010,11100011010,11101111010,11001000010,11110001010,1010011e4,10100001100,1001011e4,10010000110,10000101100,10000100110,1011001e4,10110000100,1001101e4,10011000010,10000110100,10000110010,11000010010,1100101e4,11110111010,11000010100,10001111010,10100111100,10010111100,10010011110,10111100100,10011110100,10011110010,11110100100,11110010100,11110010010,11011011110,11011110110,11110110110,10101111e3,10100011110,10001011110,10111101e3,10111100010,11110101e3,11110100010,10111011110,10111101110,11101011110,11110101110,11010000100,1101001e4,11010011100,1100011101011]},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(11),a=(r=i)&&r.__esModule?r:{default:r},u=n(0);var s=function(t){function e(t,n){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var r=function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,t.substring(1),n));return r.bytes=t.split("").map((function(t){return t.charCodeAt(0)})),r}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(e,t),o(e,[{key:"valid",value:function(){return/^[\x00-\x7F\xC8-\xD3]+$/.test(this.data)}},{key:"encode",value:function(){var t=this.bytes,n=t.shift()-105,r=u.SET_BY_CODE[n];if(void 0===r)throw new RangeError("The encoding does not start with a start character.");!0===this.shouldEncodeAsEan128()&&t.unshift(u.FNC1);var o=e.next(t,1,r);return{text:this.text===this.data?this.text.replace(/[^\x20-\x7E]/g,""):this.text,data:e.getBar(n)+o.result+e.getBar((o.checksum+n)%u.MODULO)+e.getBar(u.STOP)}}},{key:"shouldEncodeAsEan128",value:function(){var t=this.options.ean128||!1;return"string"==typeof t&&(t="true"===t.toLowerCase()),t}}],[{key:"getBar",value:function(t){return u.BARS[t]?u.BARS[t].toString():""}},{key:"correctIndex",value:function(t,e){if(e===u.SET_A){var n=t.shift();return n<32?n+64:n-32}return e===u.SET_B?t.shift()-32:10*(t.shift()-48)+t.shift()-48}},{key:"next",value:function(t,n,r){if(!t.length)return{result:"",checksum:0};var o=void 0,i=void 0;if(t[0]>=200){i=t.shift()-105;var a=u.SWAP[i];void 0!==a?o=e.next(t,n+1,a):(r!==u.SET_A&&r!==u.SET_B||i!==u.SHIFT||(t[0]=r===u.SET_A?t[0]>95?t[0]-96:t[0]:t[0]<32?t[0]+96:t[0]),o=e.next(t,n+1,r))}else i=e.correctIndex(t,r),o=e.next(t,n+1,r);var s=i*n;return{result:e.getBar(i)+o.result,checksum:s+o.checksum}}}]),e}(a.default);e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var r in n)Object.prototype.hasOwnProperty.call(n,r)&&(t[r]=n[r])}return t};e.default=function(t,e){return r({},t,e)}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(t){var e=["width","height","textMargin","fontSize","margin","marginTop","marginBottom","marginLeft","marginRight"];for(var n in e)e.hasOwnProperty(n)&&(n=e[n],"string"==typeof t[n]&&(t[n]=parseInt(t[n],10)));"string"==typeof t.displayValue&&(t.displayValue="false"!=t.displayValue);return t}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r={width:2,height:100,format:"auto",displayValue:!0,fontOptions:"",font:"monospace",text:void 0,textAlign:"center",textPosition:"bottom",textMargin:2,fontSize:20,background:"#ffffff",lineColor:"#000000",margin:10,marginTop:void 0,marginBottom:void 0,marginLeft:void 0,marginRight:void 0,valid:function(){}};e.default=r},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.getTotalWidthOfEncodings=e.calculateEncodingAttributes=e.getBarcodePadding=e.getEncodingHeight=e.getMaximumHeightOfEncodings=void 0;var r,o=n(2),i=(r=o)&&r.__esModule?r:{default:r};function a(t,e){return e.height+(e.displayValue&&t.text.length>0?e.fontSize+e.textMargin:0)+e.marginTop+e.marginBottom}function u(t,e,n){if(n.displayValue&&e<t){if("center"==n.textAlign)return Math.floor((t-e)/2);if("left"==n.textAlign)return 0;if("right"==n.textAlign)return Math.floor(t-e)}return 0}function s(t,e,n){var r;if(n)r=n;else{if("undefined"==typeof document)return 0;r=document.createElement("canvas").getContext("2d")}r.font=e.fontOptions+" "+e.fontSize+"px "+e.font;var o=r.measureText(t);return o?o.width:0}e.getMaximumHeightOfEncodings=function(t){for(var e=0,n=0;n<t.length;n++)t[n].height>e&&(e=t[n].height);return e},e.getEncodingHeight=a,e.getBarcodePadding=u,e.calculateEncodingAttributes=function(t,e,n){for(var r=0;r<t.length;r++){var o,f=t[r],c=(0,i.default)(e,f.options);o=c.displayValue?s(f.text,c,n):0;var l=f.data.length*c.width;f.width=Math.ceil(Math.max(o,l)),f.height=a(f,c),f.barcodePadding=u(o,l,c)}},e.getTotalWidthOfEncodings=function(t){for(var e=0,n=0;n<t.length;n++)e+=t[n].width;return e}},function(t,e,n){"use strict";function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}function o(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}function i(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}Object.defineProperty(e,"__esModule",{value:!0});var a=function(t){function e(t,n){r(this,e);var i=o(this,(e.__proto__||Object.getPrototypeOf(e)).call(this));return i.name="InvalidInputException",i.symbology=t,i.input=n,i.message='"'+i.input+'" is not a valid input for '+i.symbology,i}return i(e,Error),e}(),u=function(t){function e(){r(this,e);var t=o(this,(e.__proto__||Object.getPrototypeOf(e)).call(this));return t.name="InvalidElementException",t.message="Not supported type to render on",t}return i(e,Error),e}(),s=function(t){function e(){r(this,e);var t=o(this,(e.__proto__||Object.getPrototypeOf(e)).call(this));return t.name="NoElementException",t.message="No element to render on.",t}return i(e,Error),e}();e.InvalidInputException=a,e.InvalidElementException=u,e.NoElementException=s},function(t,e,n){"use strict";var r=d(n(8)),o=d(n(2)),i=d(n(16)),a=d(n(17)),u=d(n(18)),s=d(n(3)),f=d(n(24)),c=n(6),l=d(n(4));function d(t){return t&&t.__esModule?t:{default:t}}var p=function(){},h=function(t,e,n){var r=new p;if(void 0===t)throw Error("No element to render on was provided.");return r._renderProperties=(0,u.default)(t),r._encodings=[],r._options=l.default,r._errorHandler=new f.default(r),void 0!==e&&((n=n||{}).format||(n.format=b()),r.options(n)[n.format](e,n).render()),r};for(var v in h.getModule=function(t){return r.default[t]},r.default)r.default.hasOwnProperty(v)&&g(r.default,v);function g(t,e){p.prototype[e]=p.prototype[e.toUpperCase()]=p.prototype[e.toLowerCase()]=function(n,r){var i=this;return i._errorHandler.wrapBarcodeCall((function(){r.text=void 0===r.text?void 0:""+r.text;var a=(0,o.default)(i._options,r);a=(0,s.default)(a);var u=t[e],f=y(n,u,a);return i._encodings.push(f),i}))}}function y(t,e,n){var r=new e(t=""+t,n);if(!r.valid())throw new c.InvalidInputException(r.constructor.name,t);var a=r.encode();a=(0,i.default)(a);for(var u=0;u<a.length;u++)a[u].options=(0,o.default)(n,a[u].options);return a}function b(){return r.default.CODE128?"CODE128":Object.keys(r.default)[0]}function _(t,e,n){e=(0,i.default)(e);for(var r=0;r<e.length;r++)e[r].options=(0,o.default)(n,e[r].options),(0,a.default)(e[r].options);(0,a.default)(n),new(0,t.renderer)(t.element,e,n).render(),t.afterRender&&t.afterRender()}p.prototype.options=function(t){return this._options=(0,o.default)(this._options,t),this},p.prototype.blank=function(t){var e=new Array(t+1).join("0");return this._encodings.push({data:e}),this},p.prototype.init=function(){var t;if(this._renderProperties)for(var e in Array.isArray(this._renderProperties)||(this._renderProperties=[this._renderProperties]),this._renderProperties){t=this._renderProperties[e];var n=(0,o.default)(this._options,t.options);"auto"==n.format&&(n.format=b()),this._errorHandler.wrapBarcodeCall((function(){var e=y(n.value,r.default[n.format.toUpperCase()],n);_(t,e,n)}))}},p.prototype.render=function(){if(!this._renderProperties)throw new c.NoElementException;if(Array.isArray(this._renderProperties))for(var t=0;t<this._renderProperties.length;t++)_(this._renderProperties[t],this._encodings,this._options);else _(this._renderProperties,this._encodings,this._options);return this},p.prototype._defaults=l.default,"undefined"!=typeof window&&(window.JsBarcode=h),"undefined"!=typeof jQuery&&(jQuery.fn.JsBarcode=function(t,e){var n=[];return jQuery(this).each((function(){n.push(this)})),h(n,t,e)}),t.exports=h},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=n(9);e.default={CODE128:r.CODE128,CODE128A:r.CODE128A,CODE128B:r.CODE128B,CODE128C:r.CODE128C}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.CODE128C=e.CODE128B=e.CODE128A=e.CODE128=void 0;var r=u(n(10)),o=u(n(13)),i=u(n(14)),a=u(n(15));function u(t){return t&&t.__esModule?t:{default:t}}e.CODE128=r.default,e.CODE128A=o.default,e.CODE128B=i.default,e.CODE128C=a.default},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=i(n(1)),o=i(n(12));function i(t){return t&&t.__esModule?t:{default:t}}function a(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}var u=function(t){function e(t,n){if(function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),/^[\x00-\x7F\xC8-\xD3]+$/.test(t))var r=a(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,(0,o.default)(t),n));else r=a(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,t,n));return a(r)}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(e,t),e}(r.default);e.default=u},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});e.default=function t(e,n){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.data=e,this.text=n.text||e,this.options=n}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=n(0),o=function(t){return t.match(new RegExp("^"+r.A_CHARS+"*"))[0].length},i=function(t){return t.match(new RegExp("^"+r.B_CHARS+"*"))[0].length},a=function(t){return t.match(new RegExp("^"+r.C_CHARS+"*"))[0]};function u(t,e){var n=e?r.A_CHARS:r.B_CHARS,o=t.match(new RegExp("^("+n+"+?)(([0-9]{2}){2,})([^0-9]|$)"));if(o)return o[1]+String.fromCharCode(204)+s(t.substring(o[1].length));var i=t.match(new RegExp("^"+n+"+"))[0];return i.length===t.length?t:i+String.fromCharCode(e?205:206)+u(t.substring(i.length),!e)}function s(t){var e=a(t),n=e.length;if(n===t.length)return t;t=t.substring(n);var r=o(t)>=i(t);return e+String.fromCharCode(r?206:205)+u(t,r)}e.default=function(t){var e=void 0;if(a(t).length>=2)e=r.C_START_CHAR+s(t);else{var n=o(t)>i(t);e=(n?r.A_START_CHAR:r.B_START_CHAR)+u(t,n)}return e.replace(/[\xCD\xCE]([^])[\xCD\xCE]/,(function(t,e){return String.fromCharCode(203)+e}))}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(1),a=(r=i)&&r.__esModule?r:{default:r},u=n(0);var s=function(t){function e(t,n){return function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,u.A_START_CHAR+t,n))}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(e,t),o(e,[{key:"valid",value:function(){return new RegExp("^"+u.A_CHARS+"+$").test(this.data)}}]),e}(a.default);e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(1),a=(r=i)&&r.__esModule?r:{default:r},u=n(0);var s=function(t){function e(t,n){return function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,u.B_START_CHAR+t,n))}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(e,t),o(e,[{key:"valid",value:function(){return new RegExp("^"+u.B_CHARS+"+$").test(this.data)}}]),e}(a.default);e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(1),a=(r=i)&&r.__esModule?r:{default:r},u=n(0);var s=function(t){function e(t,n){return function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,(e.__proto__||Object.getPrototypeOf(e)).call(this,u.C_START_CHAR+t,n))}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(e,t),o(e,[{key:"valid",value:function(){return new RegExp("^"+u.C_CHARS+"+$").test(this.data)}}]),e}(a.default);e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(t){var e=[];return function t(n){if(Array.isArray(n))for(var r=0;r<n.length;r++)t(n[r]);else n.text=n.text||"",n.data=n.data||"",e.push(n)}(t),e}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(t){return t.marginTop=t.marginTop||t.margin,t.marginBottom=t.marginBottom||t.margin,t.marginRight=t.marginRight||t.margin,t.marginLeft=t.marginLeft||t.margin,t}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},o=u(n(19)),i=u(n(20)),a=n(6);function u(t){return t&&t.__esModule?t:{default:t}}function s(t){if("string"==typeof t)return function(t){var e=document.querySelectorAll(t);if(0===e.length)return;for(var n=[],r=0;r<e.length;r++)n.push(s(e[r]));return n}(t);if(Array.isArray(t)){for(var e=[],n=0;n<t.length;n++)e.push(s(t[n]));return e}if("undefined"!=typeof HTMLCanvasElement&&t instanceof HTMLImageElement)return u=t,{element:f=document.createElement("canvas"),options:(0,o.default)(u),renderer:i.default.CanvasRenderer,afterRender:function(){u.setAttribute("src",f.toDataURL())}};if(t&&t.nodeName&&"svg"===t.nodeName.toLowerCase()||"undefined"!=typeof SVGElement&&t instanceof SVGElement)return{element:t,options:(0,o.default)(t),renderer:i.default.SVGRenderer};if("undefined"!=typeof HTMLCanvasElement&&t instanceof HTMLCanvasElement)return{element:t,options:(0,o.default)(t),renderer:i.default.CanvasRenderer};if(t&&t.getContext)return{element:t,renderer:i.default.CanvasRenderer};if(t&&"object"===(void 0===t?"undefined":r(t))&&!t.nodeName)return{element:t,renderer:i.default.ObjectRenderer};throw new a.InvalidElementException;var u,f}e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=i(n(3)),o=i(n(4));function i(t){return t&&t.__esModule?t:{default:t}}e.default=function(t){var e={};for(var n in o.default)o.default.hasOwnProperty(n)&&(t.hasAttribute("jsbarcode-"+n.toLowerCase())&&(e[n]=t.getAttribute("jsbarcode-"+n.toLowerCase())),t.hasAttribute("data-"+n.toLowerCase())&&(e[n]=t.getAttribute("data-"+n.toLowerCase())));return e.value=t.getAttribute("jsbarcode-value")||t.getAttribute("data-value"),e=(0,r.default)(e)}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=a(n(21)),o=a(n(22)),i=a(n(23));function a(t){return t&&t.__esModule?t:{default:t}}e.default={CanvasRenderer:r.default,SVGRenderer:o.default,ObjectRenderer:i.default}},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(2),a=(r=i)&&r.__esModule?r:{default:r},u=n(5);var s=function(){function t(e,n,r){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.canvas=e,this.encodings=n,this.options=r}return o(t,[{key:"render",value:function(){if(!this.canvas.getContext)throw new Error("The browser does not support canvas.");this.prepareCanvas();for(var t=0;t<this.encodings.length;t++){var e=(0,a.default)(this.options,this.encodings[t].options);this.drawCanvasBarcode(e,this.encodings[t]),this.drawCanvasText(e,this.encodings[t]),this.moveCanvasDrawing(this.encodings[t])}this.restoreCanvas()}},{key:"prepareCanvas",value:function(){var t=this.canvas.getContext("2d");t.save(),(0,u.calculateEncodingAttributes)(this.encodings,this.options,t);var e=(0,u.getTotalWidthOfEncodings)(this.encodings),n=(0,u.getMaximumHeightOfEncodings)(this.encodings);this.canvas.width=e+this.options.marginLeft+this.options.marginRight,this.canvas.height=n,t.clearRect(0,0,this.canvas.width,this.canvas.height),this.options.background&&(t.fillStyle=this.options.background,t.fillRect(0,0,this.canvas.width,this.canvas.height)),t.translate(this.options.marginLeft,0)}},{key:"drawCanvasBarcode",value:function(t,e){var n,r=this.canvas.getContext("2d"),o=e.data;n="top"==t.textPosition?t.marginTop+t.fontSize+t.textMargin:t.marginTop,r.fillStyle=t.lineColor;for(var i=0;i<o.length;i++){var a=i*t.width+e.barcodePadding;"1"===o[i]?r.fillRect(a,n,t.width,t.height):o[i]&&r.fillRect(a,n,t.width,t.height*o[i])}}},{key:"drawCanvasText",value:function(t,e){var n,r,o=this.canvas.getContext("2d"),i=t.fontOptions+" "+t.fontSize+"px "+t.font;t.displayValue&&(r="top"==t.textPosition?t.marginTop+t.fontSize-t.textMargin:t.height+t.textMargin+t.marginTop+t.fontSize,o.font=i,"left"==t.textAlign||e.barcodePadding>0?(n=0,o.textAlign="left"):"right"==t.textAlign?(n=e.width-1,o.textAlign="right"):(n=e.width/2,o.textAlign="center"),o.fillText(e.text,n,r))}},{key:"moveCanvasDrawing",value:function(t){this.canvas.getContext("2d").translate(t.width,0)}},{key:"restoreCanvas",value:function(){this.canvas.getContext("2d").restore()}}]),t}();e.default=s},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r,o=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}(),i=n(2),a=(r=i)&&r.__esModule?r:{default:r},u=n(5);var s="http://www.w3.org/2000/svg",f=function(){function t(e,n,r){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.svg=e,this.encodings=n,this.options=r,this.document=r.xmlDocument||document}return o(t,[{key:"render",value:function(){var t=this.options.marginLeft;this.prepareSVG();for(var e=0;e<this.encodings.length;e++){var n=this.encodings[e],r=(0,a.default)(this.options,n.options),o=this.createGroup(t,r.marginTop,this.svg);this.setGroupOptions(o,r),this.drawSvgBarcode(o,r,n),this.drawSVGText(o,r,n),t+=n.width}}},{key:"prepareSVG",value:function(){for(;this.svg.firstChild;)this.svg.removeChild(this.svg.firstChild);(0,u.calculateEncodingAttributes)(this.encodings,this.options);var t=(0,u.getTotalWidthOfEncodings)(this.encodings),e=(0,u.getMaximumHeightOfEncodings)(this.encodings),n=t+this.options.marginLeft+this.options.marginRight;this.setSvgAttributes(n,e),this.options.background&&this.drawRect(0,0,n,e,this.svg).setAttribute("fill",this.options.background)}},{key:"drawSvgBarcode",value:function(t,e,n){var r,o=n.data;r="top"==e.textPosition?e.fontSize+e.textMargin:0;for(var i=0,a=0,u=0;u<o.length;u++)a=u*e.width+n.barcodePadding,"1"===o[u]?i++:i>0&&(this.drawRect(a-e.width*i,r,e.width*i,e.height,t),i=0);i>0&&this.drawRect(a-e.width*(i-1),r,e.width*i,e.height,t)}},{key:"drawSVGText",value:function(t,e,n){var r,o,i=this.document.createElementNS(s,"text");e.displayValue&&(i.setAttribute("font-family",e.font),i.setAttribute("font-size",e.fontSize),e.fontOptions.includes("bold")&&i.setAttribute("font-weight","bold"),e.fontOptions.includes("italic")&&i.setAttribute("font-style","italic"),o="top"==e.textPosition?e.fontSize-e.textMargin:e.height+e.textMargin+e.fontSize,"left"==e.textAlign||n.barcodePadding>0?(r=0,i.setAttribute("text-anchor","start")):"right"==e.textAlign?(r=n.width-1,i.setAttribute("text-anchor","end")):(r=n.width/2,i.setAttribute("text-anchor","middle")),i.setAttribute("x",r),i.setAttribute("y",o),i.appendChild(this.document.createTextNode(n.text)),t.appendChild(i))}},{key:"setSvgAttributes",value:function(t,e){var n=this.svg;n.setAttribute("width",t+"px"),n.setAttribute("height",e+"px"),n.setAttribute("x","0px"),n.setAttribute("y","0px"),n.setAttribute("viewBox","0 0 "+t+" "+e),n.setAttribute("xmlns",s),n.setAttribute("version","1.1")}},{key:"createGroup",value:function(t,e,n){var r=this.document.createElementNS(s,"g");return r.setAttribute("transform","translate("+t+", "+e+")"),n.appendChild(r),r}},{key:"setGroupOptions",value:function(t,e){t.setAttribute("fill",e.lineColor)}},{key:"drawRect",value:function(t,e,n,r,o){var i=this.document.createElementNS(s,"rect");return i.setAttribute("x",t),i.setAttribute("y",e),i.setAttribute("width",n),i.setAttribute("height",r),o.appendChild(i),i}}]),t}();e.default=f},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}();var o=function(){function t(e,n,r){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.object=e,this.encodings=n,this.options=r}return r(t,[{key:"render",value:function(){this.object.encodings=this.encodings}}]),t}();e.default=o},function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0});var r=function(){function t(t,e){for(var n=0;n<e.length;n++){var r=e[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(t,r.key,r)}}return function(e,n,r){return n&&t(e.prototype,n),r&&t(e,r),e}}();var o=function(){function t(e){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.api=e}return r(t,[{key:"handleCatch",value:function(t){if("InvalidInputException"!==t.name)throw t;if(this.api._options.valid===this.api._defaults.valid)throw t.message;this.api._options.valid(!1),this.api.render=function(){}}},{key:"wrapBarcodeCall",value:function(t){try{var e=t.apply(void 0,arguments);return this.api._options.valid(!0),e}catch(t){return this.handleCatch(t),this.api}}}]),t}();e.default=o}]);
+
+</script>
+
+<style>
+  :root{
+    --bg:#eef5f7;
+    --surface:#ffffff;
+    --surface-alt:#f2f8f9;
+    --ink:#101c22;
+    --ink-soft:#54666c;
+    --ink-faint:#89999e;
+    --line:#dfeaec;
+    --line-strong:#c9dade;
+    --primary:#0c6b83;
+    --primary-dark:#073e4d;
+    --primary-tint:#e2f3f6;
+    --accent:#c8973f;
+    --accent-dark:#a97c2c;
+    --accent-tint:#fbf1de;
+    --success:#1f7a4d;
+    --success-tint:#e7f5ed;
+    --danger:#c0392b;
+    --danger-tint:#fbeae7;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow-sm:0 1px 2px rgba(8,45,54,.06), 0 1px 4px rgba(8,45,54,.06);
+    --shadow-md:0 10px 26px rgba(8,45,54,.13);
+    --mono:ui-monospace,SFMono-Regular,"IBM Plex Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Bengali",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
+
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(650px 420px at 8% -8%, rgba(12,107,131,.30), transparent 62%),
+      radial-gradient(560px 360px at 100% 0%, rgba(200,151,63,.22), transparent 58%),
+      radial-gradient(700px 500px at 50% 115%, rgba(31,122,166,.20), transparent 60%),
+      linear-gradient(180deg, #e4f2f5, #eaf4ee 55%, #eef1f6);
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+
+  /* ---------- Header ---------- */
+  header.app-top{
+    position:sticky; top:0; z-index:30;
+    background:linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color:#fff;
+    box-shadow:var(--shadow-md);
+    overflow:hidden;
+  }
+  header.app-top::before{
+    content:''; position:absolute; width:180px; height:180px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 65%);
+    top:-90px; right:-40px; pointer-events:none;
+  }
+  header.app-top::after{
+    content:''; position:absolute; width:110px; height:110px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.10), transparent 65%);
+    bottom:-70px; left:18%; pointer-events:none;
+  }
+  header.app-top .top-inner{position:relative; z-index:1;}
+  .top-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; gap:12px; flex-wrap:wrap;
+  }
+  .brand-row{display:flex; align-items:center; gap:11px;}
+  .logo-mark{
+    position:relative; width:40px; height:40px; border-radius:50%; flex:0 0 auto;
+    background:linear-gradient(155deg, var(--accent), var(--accent-dark));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:1.05rem; color:#2a1c04; overflow:hidden;
+    box-shadow:0 3px 10px rgba(0,0,0,.28), inset 0 1px 1px rgba(255,255,255,.4);
+  }
+  .logo-mark::before{
+    content:''; position:absolute; top:8%; left:18%; width:46%; height:32%;
+    background:rgba(255,255,255,.55); border-radius:50%; filter:blur(1px);
+    transform:rotate(-18deg);
+  }
+  .logo-mark img{width:100%; height:100%; object-fit:cover; position:relative; z-index:1;}
+  .logo-mark-lg{width:64px; height:64px; font-size:1.5rem; border-radius:22px;}
+  .logo-mark-lg::before{border-radius:inherit;}
+  .brandblock{display:flex; flex-direction:column; line-height:1.2;}
+  .brandblock b{font-size:1.14rem; letter-spacing:.2px; font-weight:800;}
+  .brandblock span{font-size:.74rem; opacity:.78; font-family:var(--mono);}
+  header .badge{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.24); color:#fff;}
+
+  /* ---------- Tabs ---------- */
+  nav.tabs{
+    display:flex; overflow-x:auto; gap:4px;
+    background:rgba(7,26,32,.62);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    scrollbar-width:thin;
+    padding:7px 8px;
+  }
+  nav.tabs button{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:6px;
+    padding:9px 14px;
+    background:transparent; border:none; color:#c7d0e0;
+    font-family:var(--sans); font-size:.82rem; font-weight:700;
+    cursor:pointer; white-space:nowrap; border-radius:999px;
+    transition:background .15s, color .15s;
+  }
+  nav.tabs button .tab-ic{font-size:.92rem; line-height:1;}
+  nav.tabs button:hover{background:rgba(255,255,255,.10); color:#fff;}
+  nav.tabs button.active{background:linear-gradient(155deg, var(--accent), var(--accent-dark)); color:#2a1c04; box-shadow:0 2px 8px rgba(0,0,0,.25);}
+
+  main{max-width:980px; margin:0 auto; padding:18px 14px 64px;}
+  section.tab{display:none;}
+  section.tab.active{display:block; animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:none;}}
+
+  h2.section-title{
+    font-size:1.02rem; margin:6px 0 16px; font-weight:800;
+    display:flex; align-items:center; gap:9px; color:var(--ink);
+  }
+  h2.section-title .eyebrow{
+    font-family:var(--mono); font-size:.68rem; font-weight:700; letter-spacing:.3px;
+    background:var(--primary-tint); color:var(--primary);
+    padding:3px 9px; border-radius:999px; text-transform:uppercase;
+  }
+
+  .card{
+    position:relative;
+    background:linear-gradient(155deg, rgba(255,255,255,.68), rgba(255,255,255,.42));
+    border:1px solid rgba(255,255,255,.75); border-radius:var(--radius);
+    padding:18px; margin-bottom:16px;
+    box-shadow:var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.6);
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  }
+  .card::before{
+    content:''; position:absolute; top:0; left:6%; right:6%; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent);
+    pointer-events:none;
+  }
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:560px){ .grid2{grid-template-columns:1fr;} }
+
+  label{font-size:.78rem; color:var(--ink-soft); display:block; margin:10px 0 5px; font-weight:700;}
+  input[type=text],input[type=number],input[type=email],input[type=tel],select,textarea{
+    width:100%; padding:11px 14px; border:1.5px solid var(--line-strong); border-radius:999px;
+    font-size:.92rem; font-family:var(--sans); background:var(--surface-alt);
+    color:var(--ink); transition:border-color .15s, background .15s;
+  }
+  textarea{border-radius:var(--radius-sm);}
+  input:focus,select:focus,textarea:focus{
+    outline:none; border-color:var(--primary); background:var(--surface);
+  }
+  button:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+  .price-field{font-family:var(--mono);}
+
+  button.btn{
+    position:relative; overflow:hidden;
+    border:none; border-radius:999px; padding:11px 20px; font-weight:700;
+    font-size:.85rem; cursor:pointer; font-family:var(--sans);
+    transition:transform .08s ease, box-shadow .15s, background .15s, opacity .15s;
+    box-shadow:var(--shadow-sm);
+  }
+  button.btn::before{
+    content:''; position:absolute; top:0; left:8%; right:8%; height:46%;
+    background:linear-gradient(180deg, rgba(255,255,255,.35), transparent);
+    border-radius:999px 999px 60% 60%/100% 100% 0 0; pointer-events:none;
+  }
+  button.btn:active{transform:translateY(1px) scale(.99);}
+  .btn-primary{background:linear-gradient(155deg, var(--primary), var(--primary-dark)); color:#fff;}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-amber{background:linear-gradient(155deg, var(--accent), var(--accent-dark)); color:#2a1c04;}
+  .btn-outline{background:rgba(255,255,255,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1.5px solid rgba(255,255,255,.8); color:var(--ink); box-shadow:0 1px 3px rgba(8,45,54,.06);}
+  .btn-outline::before{display:none;}
+  .btn-outline:hover{border-color:var(--primary); color:var(--primary);}
+  .btn-danger{background:linear-gradient(155deg, var(--danger), #8f2a1e); color:#fff;}
+  .btn-sm{padding:7px 13px; font-size:.76rem;}
+  .row-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center;}
+
+  table{width:100%; border-collapse:collapse; font-size:.86rem;}
+  th,td{padding:10px 8px; text-align:left; border-bottom:1px solid var(--line);}
+  th{font-size:.68rem; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-faint); font-weight:800; background:var(--surface-alt);}
+  td.num, th.num{text-align:right; font-family:var(--mono);}
+  tbody tr:hover{background:var(--surface-alt);}
+  tr.selected{background:var(--primary-tint);}
+  .table-wrap{overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line);}
+  .table-wrap table{margin:0;}
+
+  .badge{font-family:var(--mono); font-size:.7rem; background:var(--surface-alt); border:1px solid var(--line); padding:3px 8px; border-radius:999px; font-weight:600;}
+  .empty{padding:30px 12px; text-align:center; color:var(--ink-soft); font-size:.88rem;}
+  .empty b{display:block; color:var(--ink); margin-bottom:4px; font-size:.95rem; font-weight:800;}
+
+  /* stat cards */
+  .stat-value{font-size:1.9rem; font-weight:800; font-family:var(--mono); color:var(--primary);}
+
+  /* barcode preview */
+  .barcode-preview{background:var(--surface-alt); border:1.5px dashed var(--line-strong); border-radius:var(--radius); padding:18px; text-align:center;}
+  .barcode-preview svg{max-width:100%;}
+  .barcode-preview .pname{font-weight:800; margin-top:6px; font-size:1rem;}
+  .barcode-preview .pprice{font-family:var(--mono); color:var(--primary); font-weight:800; font-size:1.05rem;}
+
+  /* label sheet on screen */
+  #labelSheet{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .label-item{border:1.5px dashed var(--line-strong); border-radius:var(--radius-sm); padding:9px; text-align:center; background:var(--surface);}
+  .label-item svg{width:100%; height:auto;}
+  .label-item .lname{font-size:.74rem; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .label-item .lprice{font-family:var(--mono); font-size:.76rem; color:var(--primary); font-weight:700;}
+
+  /* scanner viewfinder */
+  #reader{
+    position:relative; width:100%; max-width:420px; margin:0 auto;
+    border-radius:16px; overflow:hidden; background:#0a0e16;
+    box-shadow:var(--shadow-md); min-height:80px;
+  }
+  #reader video{display:block; width:100%;}
+  #reader.scanning::after{
+    content:''; position:absolute; left:10%; right:10%; top:15%; height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent) 40%, var(--accent) 60%, transparent);
+    box-shadow:0 0 10px 1px var(--accent);
+    animation:scanline 2s ease-in-out infinite;
+  }
+  #reader.scanning::before{
+    content:''; position:absolute; inset:12%; border-radius:12px;
+    border:2px solid rgba(200,151,63,.55); pointer-events:none;
+  }
+  @keyframes scanline{ 0%{top:15%} 50%{top:82%} 100%{top:15%} }
+  .scan-result{margin-top:14px;}
+  .scan-hit{border:1.5px solid var(--success); background:var(--success-tint); border-radius:var(--radius-sm); padding:14px;}
+  .scan-miss{border:1.5px solid var(--danger); background:var(--danger-tint); border-radius:var(--radius-sm); padding:14px; color:#8a2c20; font-weight:600; line-height:1.6;}
+
+  /* cart / billing */
+  .cart-row{display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .cart-row .ci-name{flex:1; font-size:.86rem;}
+  .cart-row .ci-name small{display:block; color:var(--ink-soft); font-family:var(--mono); font-size:.7rem;}
+  .qty-ctrl{display:flex; align-items:center; gap:7px;}
+  .qty-ctrl button{width:28px; height:28px; border-radius:var(--radius-sm); border:1.5px solid var(--line-strong); background:var(--surface-alt); cursor:pointer; font-weight:800;}
+  .qty-ctrl span{min-width:20px; text-align:center; font-family:var(--mono); font-weight:700;}
+  .cart-row .ci-line-total{width:80px; text-align:right; font-family:var(--mono); font-weight:700;}
+  .totals{margin-top:14px; padding-top:14px; border-top:1.5px dashed var(--line-strong);}
+  .totals .trow{display:flex; justify-content:space-between; padding:4px 0; font-family:var(--mono);}
+  .totals .trow.grand{font-size:1.2rem; font-weight:800; color:var(--primary); border-top:1px solid var(--line); margin-top:6px; padding-top:10px;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--primary-dark); color:#fff; padding:11px 18px; border-radius:999px;
+    font-size:.85rem; z-index:99; opacity:0; pointer-events:none; transition:opacity .25s;
+    box-shadow:var(--shadow-md); font-weight:600;
+  }
+  .toast.show{opacity:1;}
+
+  /* ---------- Print ---------- */
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block; position:absolute; top:0; left:0; width:100%;}
+    .print-labels{display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; padding:4mm;}
+    .print-label{border:1px dashed #999; padding:2mm; text-align:center; break-inside:avoid;}
+    .print-label svg{width:100%; height:auto;}
+    .print-label .pln{font-size:9pt; font-weight:700; margin-top:1mm;}
+    .print-label .plp{font-size:9pt; font-family:var(--mono);}
+    .print-label .plc{font-size:7pt; color:#333;}
+    .receipt{width:78mm; margin:0 auto; font-family:var(--mono); font-size:9.5pt; padding:3mm;}
+    .receipt h3{text-align:center; margin:0 0 2px; font-size:11pt;}
+    .receipt .ctr{text-align:center;}
+    .receipt hr{border:none; border-top:1px dashed #000; margin:6px 0;}
+    .receipt table{width:100%; border-collapse:collapse;}
+    .receipt td{padding:1.5px 0; font-size:9pt;}
+    .receipt .rtot{font-weight:700; font-size:10.5pt;}
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+    .card{background:rgba(255,255,255,.96);}
+    nav.tabs{background:var(--primary-dark);}
+    .btn-outline{background:var(--surface);}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-top">
+  <div class="top-inner">
+    <div class="brand-row">
+      <div class="logo-mark" id="logoMark">M</div>
+      <div class="brandblock">
+        <b id="brandName">MBT Quantum Tech</b>
+        <span id="brandSub">POS · বারকোড · বিলিং — অফলাইন সিস্টেম</span>
+      </div>
+    </div>
+    <div class="badge" id="clockBadge">—</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="dashboard" class="active"><span class="tab-ic">📊</span>ড্যাশবোর্ড</button>
+  <button data-tab="products"><span class="tab-ic">📦</span>প্রোডাক্ট</button>
+  <button data-tab="barcode"><span class="tab-ic">🏷️</span>বারকোড</button>
+  <button data-tab="scanner"><span class="tab-ic">📷</span>স্ক্যানার</button>
+  <button data-tab="billing"><span class="tab-ic">🧾</span>বিলিং</button>
+  <button data-tab="reports"><span class="tab-ic">📈</span>রিপোর্ট</button>
+  <button data-tab="settings"><span class="tab-ic">⚙️</span>সেটিংস</button>
+</nav>
+
+<main>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="tab active" id="tab-dashboard">
+    <h2 class="section-title"><span class="eyebrow">সারসংক্ষেপ</span> আজকের অবস্থা</h2>
+    <div class="grid2">
+      <div class="card">
+        <label style="margin-top:0">মোট প্রোডাক্ট</label>
+        <div style="font-size:1.8rem;font-weight:800;font-family:var(--mono)" id="statProducts">0</div>
+      </div>
+      <div class="card">
+        <label style="margin-top:0">মোট বিক্রি (সেভ করা মেমো)</label>
+        <div style="font-size:1.8rem;font-weight:800;font-family:var(--mono)" id="statSales">0</div>
+      </div>
+    </div>
+    <div class="card">
+      <label style="margin-top:0">দ্রুত কাজ</label>
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="switchTab('products')">+ নতুন প্রোডাক্ট যোগ করুন</button>
+        <button class="btn btn-outline" onclick="switchTab('scanner')">বারকোড স্ক্যান করুন</button>
+        <button class="btn btn-outline" onclick="switchTab('reports')">Excel এক্সপোর্ট</button>
+      </div>
+    </div>
+    <div class="card">
+      <label style="margin-top:0">সাম্প্রতিক প্রোডাক্ট</label>
+      <div class="table-wrap"><table>
+        <thead><tr><th>নাম</th><th>কোড</th><th class="num">দাম</th></tr></thead>
+        <tbody id="recentProductsBody"></tbody>
+      </table></div>
+      <div class="empty" id="recentEmpty" style="display:none"><b>কোনো প্রোডাক্ট নেই</b>প্রথমে "প্রোডাক্ট" ট্যাব থেকে একটি প্রোডাক্ট যোগ করুন</div>
+    </div>
+  </section>
+
+  <!-- ================= PRODUCTS ================= -->
+  <section class="tab" id="tab-products">
+    <h2 class="section-title"><span class="eyebrow">প্রোডাক্ট</span> নতুন প্রোডাক্ট যোগ করুন</h2>
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label>প্রোডাক্টের নাম *</label>
+          <input type="text" id="pName" placeholder="যেমন: লাক্স সাবান ৭৫গ্রাম">
+        </div>
+        <div>
+          <label>প্রোডাক্ট কোড (ফাঁকা রাখলে অটো তৈরি হবে)</label>
+          <input type="text" id="pCode" placeholder="যেমন: SOAP001">
+        </div>
+        <div>
+          <label>দাম (৳) *</label>
+          <input type="number" class="price-field" id="pPrice" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div>
+          <label>ক্যাটাগরি (ঐচ্ছিক)</label>
+          <input type="text" id="pCategory" placeholder="যেমন: কসমেটিক্স">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="addProduct()">প্রোডাক্ট সংরক্ষণ করুন</button>
+        <button class="btn btn-outline" onclick="clearProductForm()">ফর্ম মুছুন</button>
+      </div>
+      <div class="barcode-preview" id="livePreview" style="margin-top:14px; display:none;">
+        <svg id="liveBarcodeSvg"></svg>
+        <div class="pname" id="livePName"></div>
+        <div class="pprice" id="livePPrice"></div>
+        <div class="row-actions" style="justify-content:center; margin-top:12px;">
+          <label style="margin:0; display:flex; align-items:center; gap:6px; font-weight:400;">
+            লেবেল সংখ্যা
+            <input type="number" id="liveLabelQty" min="1" value="1" style="width:64px; padding:6px 8px;">
+          </label>
+          <button class="btn btn-primary" onclick="downloadJustAddedLabelPdf()">📄 PDF সেভ করুন</button>
+          <button class="btn btn-amber" onclick="printJustAddedProduct()">🖨 তাৎক্ষণিক প্রিন্ট</button>
+          <button class="btn btn-outline" onclick="downloadJustAddedLabelImage()">🖼️ ছবি ডাউনলোড</button>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title"><span class="eyebrow">তালিকা</span> সব প্রোডাক্ট</h2>
+    <div class="card">
+      <input type="text" id="productSearch" placeholder="নাম বা কোড দিয়ে খুঁজুন..." oninput="renderProductTable()">
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead><tr><th>নাম</th><th>কোড</th><th class="num">দাম</th><th>অ্যাকশন</th></tr></thead>
+          <tbody id="productTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="productsEmpty" style="display:none"><b>কোনো প্রোডাক্ট পাওয়া যায়নি</b>উপরের ফর্ম দিয়ে একটি প্রোডাক্ট যোগ করুন</div>
+    </div>
+  </section>
+
+  <!-- ================= BARCODE PRINT ================= -->
+  <section class="tab" id="tab-barcode">
+    <h2 class="section-title"><span class="eyebrow">লেবেল</span> বারকোড প্রিন্ট করুন</h2>
+    <div class="card">
+      <p style="font-size:.82rem;color:var(--ink-soft);margin:0 0 12px">
+        💡 <b>মোবাইলে সবচেয়ে নির্ভরযোগ্য উপায়:</b> "📄 PDF সেভ করুন" চাপুন — এটা সরাসরি একটা আসল
+        PDF ফাইল ফোনে ডাউনলোড করে দেবে (কোনো প্রিন্ট ডায়ালগ ছাড়াই, তাই সব ব্রাউজারে কাজ করে)।
+        এই PDF ফাইলটা যেকোনো সময় যেকোনো প্রিন্টার/দোকান থেকে প্রিন্ট করতে পারবেন। "তাৎক্ষণিক
+        প্রিন্ট" বাটনটা ব্রাউজার সাপোর্ট করলে সাথে সাথে প্রিন্ট ডায়ালগ খুলবে।
+      </p>
+      <label style="margin-top:0">প্রোডাক্ট বাছাই করুন</label>
+      <select id="barcodeProductSelect" onchange="onBarcodeProductChange()"></select>
+      <label>কতগুলো লেবেল প্রিন্ট করবেন</label>
+      <input type="number" id="labelQty" min="1" value="1" style="max-width:140px">
+      <div class="row-actions">
+        <button class="btn btn-amber" onclick="addLabelsToSheet()">শীটে যোগ করুন</button>
+        <button class="btn btn-outline" onclick="clearLabelSheet()">শীট খালি করুন</button>
+        <button class="btn btn-primary" onclick="downloadLabelSheetPdf()">📄 PDF সেভ করুন</button>
+        <button class="btn btn-outline" onclick="printLabelSheet()">🖨 তাৎক্ষণিক প্রিন্ট</button>
+        <button class="btn btn-outline" onclick="downloadLabelSheetImage()">🖼️ ছবি ডাউনলোড</button>
+      </div>
+      <div id="labelSheet"></div>
+      <div class="empty" id="labelSheetEmpty"><b>লেবেল শীট খালি</b>উপর থেকে প্রোডাক্ট বেছে "শীটে যোগ করুন" চাপুন</div>
+    </div>
+  </section>
+
+  <!-- ================= SCANNER ================= -->
+  <section class="tab" id="tab-scanner">
+    <h2 class="section-title"><span class="eyebrow">লাইভ</span> ক্যামেরা দিয়ে স্ক্যান করুন</h2>
+    <div class="card">
+      <div class="row-actions" style="margin-top:0">
+        <button class="btn btn-primary" id="scanStartBtn" onclick="startScanner()">📷 স্ক্যানার চালু করুন</button>
+        <button class="btn btn-outline" id="scanStopBtn" onclick="stopScanner()" style="display:none">বন্ধ করুন</button>
+        <button class="btn btn-outline" id="switchCameraBtn" onclick="switchCamera()" style="display:none">🔄 ক্যামেরা পরিবর্তন</button>
+      </div>
+      <div id="scannerSupportNote" style="font-size:.78rem;color:var(--ink-soft);margin-top:8px"></div>
+      <div id="reader" style="margin-top:14px;"></div>
+      <label>অথবা ম্যানুয়ালি কোড লিখুন</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="manualCode" placeholder="প্রোডাক্ট কোড">
+        <button class="btn btn-outline btn-sm" onclick="manualLookup()">খুঁজুন</button>
+      </div>
+      <div class="scan-result" id="scanResult"></div>
+    </div>
+  </section>
+
+  <!-- ================= BILLING ================= -->
+  <section class="tab" id="tab-billing">
+    <h2 class="section-title"><span class="eyebrow">চলমান বিল</span> কাস্টমার ইনভয়েস</h2>
+    <div class="card">
+      <label style="margin-top:0">প্রোডাক্ট যোগ করুন (কোড / নাম)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="billSearch" placeholder="স্ক্যান করুন বা কোড/নাম লিখুন" onkeydown="if(event.key==='Enter')billAddByQuery()">
+        <button class="btn btn-outline btn-sm" onclick="billAddByQuery()">যোগ করুন</button>
+      </div>
+      <div id="cartList" style="margin-top:12px;"></div>
+      <div class="empty" id="cartEmpty"><b>কার্ট খালি</b>স্ক্যানার ট্যাব থেকে বা এখান থেকে প্রোডাক্ট যোগ করুন</div>
+      <div class="totals" id="cartTotals" style="display:none">
+        <div class="trow"><span>সাবটোটাল</span><span id="tSubtotal">৳0.00</span></div>
+        <div class="trow"><span>ডিসকাউন্ট (৳)</span><span><input type="number" id="tDiscount" value="0" min="0" style="width:90px; text-align:right; font-family:var(--mono)" oninput="renderCart()"></span></div>
+        <div class="trow grand"><span>সর্বমোট</span><span id="tGrand">৳0.00</span></div>
+      </div>
+      <label style="margin-top:14px">কাস্টমারের নাম (ঐচ্ছিক)</label>
+      <input type="text" id="custName" placeholder="কাস্টমারের নাম">
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="finalizeAndPrintReceipt()">📄 মেমো সম্পন্ন করুন ও PDF সেভ করুন</button>
+        <button class="btn btn-amber" onclick="instantPrintReceipt()">🖨️ তাৎক্ষণিক প্রিন্ট</button>
+        <button class="btn btn-outline" onclick="clearCart()">কার্ট খালি করুন</button>
+      </div>
+      <p style="font-size:.76rem;color:var(--ink-soft);margin-top:10px">
+        💡 আগে "PDF সেভ করুন" চাপুন — মেমোটা সেভ ও ডাউনলোড হয়ে যাবে। এরপর চাইলে "তাৎক্ষণিক প্রিন্ট"
+        চেপে সরাসরি প্রিন্ট ডায়ালগও খুলতে পারেন (ব্রাউজার সাপোর্ট করলে), অথবা ডাউনলোড হওয়া PDF
+        ফাইলটা যেকোনো সময় যেকোনো প্রিন্টার থেকে প্রিন্ট করতে পারবেন।
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= REPORTS ================= -->
+  <section class="tab" id="tab-reports">
+    <h2 class="section-title"><span class="eyebrow">ব্যাকআপ</span> এক্সপোর্ট ও রিপোর্ট</h2>
+    <div class="card">
+      <label style="margin-top:0">প্রোডাক্ট তালিকা</label>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin:4px 0 10px">সব প্রোডাক্ট, কোড ও দামসহ একটি Excel (.xlsx) ফাইল ডাউনলোড হবে।</p>
+      <button class="btn btn-primary" onclick="exportProductsExcel()">⬇ প্রোডাক্ট Excel এক্সপোর্ট</button>
+    </div>
+    <div class="card">
+      <label style="margin-top:0">বিক্রয় ইতিহাস (মেমো)</label>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin:4px 0 10px">এ পর্যন্ত সেভ হওয়া সব মেমোর বিস্তারিত তালিকা Excel ফাইলে পাবেন।</p>
+      <button class="btn btn-primary" onclick="exportSalesExcel()">⬇ বিক্রয় Excel এক্সপোর্ট</button>
+      <button class="btn btn-danger btn-sm" style="margin-top:10px" onclick="clearSalesHistory()">বিক্রয় ইতিহাস মুছুন</button>
+    </div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section class="tab" id="tab-settings">
+    <h2 class="section-title"><span class="eyebrow">ব্র্যান্ডিং</span> কোম্পানির তথ্য</h2>
+    <div class="card">
+      <label style="margin-top:0">লোগো (ঐচ্ছিক)</label>
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div class="logo-mark logo-mark-lg" id="logoPreview">M</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0;">
+            ছবি বেছে নিন
+            <input type="file" accept="image/*" style="display:none" onchange="onLogoFileChosen(event)">
+          </label>
+          <button class="btn btn-outline btn-sm" onclick="removeLogo()">লোগো সরান</button>
+        </div>
+      </div>
+      <p style="font-size:.76rem;color:var(--ink-soft);margin:8px 0 0">
+        কোনো ছবি না দিলে কোম্পানির নামের প্রথম অক্ষর দিয়ে অটোমেটিক লোগো দেখানো হবে।
+      </p>
+      <label>কোম্পানির নাম</label>
+      <input type="text" id="setName">
+      <label>মোবাইল নম্বর</label>
+      <input type="tel" id="setMobile">
+      <label>ইমেইল</label>
+      <input type="email" id="setEmail">
+      <label>মেমোর নিচে বার্তা (ঐচ্ছিক)</label>
+      <input type="text" id="setFooter" placeholder="যেমন: আবার আসবেন, ধন্যবাদ!">
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="saveSettings()">সংরক্ষণ করুন</button>
+      </div>
+    </div>
+    <div class="card">
+      <label style="margin-top:0">ডেটা ব্যাকআপ / রিস্টোর</label>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin:4px 0 10px">সব ডেটা (প্রোডাক্ট, সেটিংস, বিক্রয় ইতিহাস) এই ব্রাউজারের localStorage-এ সেভ থাকে।</p>
+      <div class="row-actions" style="margin-top:0">
+        <button class="btn btn-outline" onclick="downloadJsonBackup()">⬇ JSON ব্যাকআপ ডাউনলোড</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+          ⬆ ব্যাকআপ থেকে রিস্টোর
+          <input type="file" accept=".json" style="display:none" onchange="restoreJsonBackup(event)">
+        </label>
+        <button class="btn btn-danger" onclick="factoryReset()">সব ডেটা মুছুন</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Hidden print mount -->
+<div id="printArea"></div>
+
+<script>
+/* ===================== DATA LAYER ===================== */
+const LS_KEYS = { products:'pos_products_v1', settings:'pos_settings_v1', sales:'pos_sales_v1' };
+
+function loadProducts(){ return JSON.parse(localStorage.getItem(LS_KEYS.products) || '[]'); }
+function saveProducts(list){ localStorage.setItem(LS_KEYS.products, JSON.stringify(list)); }
+function loadSales(){ return JSON.parse(localStorage.getItem(LS_KEYS.sales) || '[]'); }
+function saveSales(list){ localStorage.setItem(LS_KEYS.sales, JSON.stringify(list)); }
+function loadSettings(){
+  return JSON.parse(localStorage.getItem(LS_KEYS.settings) || JSON.stringify({
+    name:'MBT Quantum Tech', mobile:'01830282988', email:'[email protected]', footer:'কেনাকাটার জন্য ধন্যবাদ!'
+  }));
+}
+function saveSettingsObj(obj){ localStorage.setItem(LS_KEYS.settings, JSON.stringify(obj)); }
+
+let products = loadProducts();
+let settings = loadSettings();
+let sales = loadSales();
+let cart = []; // {code, name, price, qty}
+
+/* ===================== UTIL ===================== */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function money(n){ return '৳' + (Math.round(n*100)/100).toFixed(2); }
+function genCode(){ return 'P' + Date.now().toString().slice(-8); }
+function findProduct(codeOrName){
+  const q = (codeOrName||'').trim().toLowerCase();
+  return products.find(p => p.code.toLowerCase() === q) ||
+         products.find(p => p.name.toLowerCase() === q) ||
+         products.find(p => p.name.toLowerCase().includes(q) && q.length>1);
+}
+
+/* ===================== TABS ===================== */
+function switchTab(name){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active', s.id==='tab-'+name));
+  if(name==='dashboard') renderDashboard();
+  if(name==='products') renderProductTable();
+  if(name==='barcode') refreshBarcodeSelect();
+  if(name==='settings') fillSettingsForm();
+  if(name==='scanner' && !scanning) startScanner();
+  if(name!=='scanner') stopScanner();
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>switchTab(b.dataset.tab));
+});
+
+/* ===================== BRANDING ===================== */
+function applyBrandingToHeader(){
+  const n = settings.name || 'MBT Quantum Tech';
+  document.getElementById('brandName').textContent = n;
+  renderLogoInto('logoMark', n);
+}
+function renderLogoInto(elId, name){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(settings.logo){
+    el.innerHTML = `<img src="${settings.logo}" alt="logo">`;
+  } else {
+    el.textContent = (name||'').trim().charAt(0).toUpperCase() || 'M';
+  }
+}
+function fillSettingsForm(){
+  document.getElementById('setName').value = settings.name || '';
+  document.getElementById('setMobile').value = settings.mobile || '';
+  document.getElementById('setEmail').value = settings.email || '';
+  document.getElementById('setFooter').value = settings.footer || '';
+  renderLogoInto('logoPreview', settings.name);
+}
+function saveSettings(){
+  settings.name = document.getElementById('setName').value.trim() || 'MBT Quantum Tech';
+  settings.mobile = document.getElementById('setMobile').value.trim();
+  settings.email = document.getElementById('setEmail').value.trim();
+  settings.footer = document.getElementById('setFooter').value.trim();
+  saveSettingsObj(settings);
+  applyBrandingToHeader();
+  toast('সেটিংস সংরক্ষিত হয়েছে');
+}
+
+/* ---- লোগো আপলোড: ছবি ছোট করে (max 200px) base64 আকারে localStorage-এ রাখা হয় ---- */
+function onLogoFileChosen(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('একটি ছবি ফাইল বেছে নিন'); return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxDim = 200;
+      let w = img.width, h = img.height;
+      if(w>h){ if(w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; } }
+      else { if(h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; } }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      settings.logo = c.toDataURL('image/png');
+      saveSettingsObj(settings);
+      applyBrandingToHeader();
+      renderLogoInto('logoPreview', settings.name);
+      toast('লোগো সংরক্ষিত হয়েছে');
+    };
+    img.onerror = ()=>toast('ছবিটি পড়া যায়নি');
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo(){
+  delete settings.logo;
+  saveSettingsObj(settings);
+  applyBrandingToHeader();
+  renderLogoInto('logoPreview', settings.name);
+  toast('লোগো সরানো হয়েছে');
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard(){
+  document.getElementById('statProducts').textContent = products.length;
+  document.getElementById('statSales').textContent = sales.length;
+  const body = document.getElementById('recentProductsBody');
+  const recent = [...products].slice(-5).reverse();
+  body.innerHTML = recent.map(p=>`<tr><td>${escapeHtml(p.name)}</td><td class="badge">${escapeHtml(p.code)}</td><td class="num">${money(p.price)}</td></tr>`).join('');
+  document.getElementById('recentEmpty').style.display = recent.length? 'none':'block';
+}
+
+/* ===================== PRODUCTS ===================== */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function clearProductForm(){
+  document.getElementById('pName').value='';
+  document.getElementById('pCode').value='';
+  document.getElementById('pPrice').value='';
+  document.getElementById('pCategory').value='';
+  document.getElementById('livePreview').style.display='none';
+}
+
+function addProduct(){
+  const name = document.getElementById('pName').value.trim();
+  const priceRaw = document.getElementById('pPrice').value;
+  let code = document.getElementById('pCode').value.trim();
+  const category = document.getElementById('pCategory').value.trim();
+  if(!name || priceRaw===''){ toast('নাম ও দাম আবশ্যক'); return; }
+  const price = parseFloat(priceRaw);
+  if(isNaN(price) || price<0){ toast('সঠিক দাম দিন'); return; }
+  if(!code) code = genCode();
+  if(!/^[\x20-\x7E]+$/.test(code)){ toast('কোডে শুধু ইংরেজি অক্ষর/সংখ্যা/চিহ্ন ব্যবহার করুন (বাংলা নয়) — নাহলে বারকোড স্ক্যান হবে না'); return; }
+  if(products.some(p=>p.code.toLowerCase()===code.toLowerCase())){ toast('এই কোড আগে থেকেই আছে, অন্য কোড দিন'); return; }
+  const product = { id: Date.now().toString(36), name, code, price, category };
+  products.push(product);
+  saveProducts(products);
+  clearProductForm();
+  renderProductTable();
+  toast('প্রোডাক্ট যোগ হয়েছে: ' + name);
+  showLivePreview(product);
+}
+
+let lastAddedProduct = null;
+
+function showLivePreview(p){
+  lastAddedProduct = p;
+  const box = document.getElementById('livePreview');
+  box.style.display='block';
+  try{
+    JsBarcode('#liveBarcodeSvg', p.code, {format:'CODE128', width:2, height:55, displayValue:true, fontSize:12, margin:6});
+  }catch(e){ console.error(e); toast('বারকোড আঁকতে সমস্যা হয়েছে'); }
+  document.getElementById('livePName').textContent = p.name;
+  document.getElementById('livePPrice').textContent = money(p.price);
+  document.getElementById('liveLabelQty').value = 1;
+}
+
+function printJustAddedProduct(){
+  if(!lastAddedProduct){ toast('আগে একটি প্রোডাক্ট যোগ করুন'); return; }
+  const qty = Math.max(1, parseInt(document.getElementById('liveLabelQty').value)||1);
+  const items = [];
+  for(let i=0;i<qty;i++) items.push(lastAddedProduct);
+  printLabelsList(items);
+}
+
+function renderProductTable(){
+  const q = (document.getElementById('productSearch')?.value || '').toLowerCase();
+  const body = document.getElementById('productTableBody');
+  const filtered = products.filter(p => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q));
+  body.innerHTML = filtered.map(p => `
+    <tr>
+      <td>${escapeHtml(p.name)}${p.category?`<br><small style="color:var(--ink-soft)">${escapeHtml(p.category)}</small>`:''}</td>
+      <td class="badge">${escapeHtml(p.code)}</td>
+      <td class="num">${money(p.price)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="goPrintProduct('${p.id}')">লেবেল</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">মুছুন</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('productsEmpty').style.display = filtered.length? 'none':'block';
+  refreshBarcodeSelect();
+}
+
+function deleteProduct(id){
+  if(!confirm('এই প্রোডাক্টটি মুছে ফেলতে চান?')) return;
+  products = products.filter(p=>p.id!==id);
+  saveProducts(products);
+  renderProductTable();
+  renderDashboard();
+  toast('প্রোডাক্ট মুছে ফেলা হয়েছে');
+}
+
+function goPrintProduct(id){
+  switchTab('barcode');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='barcode'));
+  document.getElementById('barcodeProductSelect').value = id;
+  onBarcodeProductChange();
+}
+
+/* ===================== BARCODE PRINT SHEET ===================== */
+let labelSheetItems = []; // {product, qty}
+
+function refreshBarcodeSelect(){
+  const sel = document.getElementById('barcodeProductSelect');
+  const current = sel.value;
+  sel.innerHTML = products.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} — ${escapeHtml(p.code)}</option>`).join('');
+  if(current) sel.value = current;
+}
+function onBarcodeProductChange(){}
+
+function addLabelsToSheet(){
+  const sel = document.getElementById('barcodeProductSelect');
+  const qty = Math.max(1, parseInt(document.getElementById('labelQty').value)||1);
+  const p = products.find(x=>x.id===sel.value);
+  if(!p){ toast('প্রথমে একটি প্রোডাক্ট বেছে নিন'); return; }
+  for(let i=0;i<qty;i++) labelSheetItems.push(p);
+  renderLabelSheet();
+}
+function clearLabelSheet(){ labelSheetItems=[]; renderLabelSheet(); }
+
+function renderLabelSheet(){
+  const wrap = document.getElementById('labelSheet');
+  document.getElementById('labelSheetEmpty').style.display = labelSheetItems.length? 'none':'block';
+  wrap.innerHTML = labelSheetItems.map((p,i)=>`
+    <div class="label-item">
+      <svg id="lbl-${i}"></svg>
+      <div class="lname">${escapeHtml(p.name)}</div>
+      <div class="lprice">${money(p.price)}</div>
+    </div>`).join('');
+  labelSheetItems.forEach((p,i)=>{
+    try{ JsBarcode('#lbl-'+i, p.code, {format:'CODE128', width:1.6, height:38, displayValue:true, fontSize:10, margin:4}); }catch(e){}
+  });
+}
+
+function printLabelsList(items){
+  if(!items.length){ toast('প্রিন্ট করার মতো কোনো লেবেল নেই'); return; }
+  const printArea = document.getElementById('printArea');
+  let html = '<div class="print-labels">';
+  items.forEach((p,i)=>{
+    html += `<div class="print-label">
+      <svg id="plbl-${i}"></svg>
+      <div class="pln">${escapeHtml(p.name)}</div>
+      <div class="plp">${money(p.price)}</div>
+      <div class="plc">${escapeHtml(settings.name)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  printArea.innerHTML = html;
+  items.forEach((p,i)=>{
+    try{ JsBarcode('#plbl-'+i, p.code, {format:'CODE128', width:1.4, height:34, displayValue:true, fontSize:9, margin:2}); }catch(e){ console.error(e); toast('বারকোড আঁকতে সমস্যা হয়েছে'); }
+  });
+  window.print();
+}
+function printLabelSheet(){
+  printLabelsList(labelSheetItems);
+}
+
+/* ---- ছবি (PNG) হিসেবে লেবেল ডাউনলোড — window.print() কাজ না করলে এটাই সবচেয়ে নির্ভরযোগ্য পথ।
+   এটি কোনো প্রিন্ট ডায়ালগ ছাড়াই সরাসরি ফোনের গ্যালারি/ডাউনলোড ফোল্ডারে একটা ছবি সেভ করে,
+   যেটা পরে যেকোনো প্রিন্ট অ্যাপ বা দোকান থেকে প্রিন্ট করা যাবে। ---- */
+function renderBarcodeToCanvas(code, opts){
+  const c = document.createElement('canvas');
+  JsBarcode(c, code, Object.assign({format:'CODE128', displayValue:false, margin:0}, opts||{}));
+  return c;
+}
+function buildLabelImage(product){
+  const barcodeCanvas = renderBarcodeToCanvas(product.code, {width:2, height:55});
+  const pad = 14;
+  const nameSize = 15, priceSize = 15, coSize = 10;
+  const w = Math.max(210, barcodeCanvas.width + pad*2);
+  const h = barcodeCanvas.height + pad*2 + nameSize + priceSize + coSize + 22;
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
+  ctx.textAlign = 'center';
+  let y = pad;
+  ctx.drawImage(barcodeCanvas, (w-barcodeCanvas.width)/2, y);
+  y += barcodeCanvas.height + 16;
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold ' + nameSize + 'px sans-serif';
+  ctx.fillText(truncateForCanvas(ctx, product.name, w-2*pad), w/2, y);
+  y += nameSize + 6;
+  ctx.font = priceSize + 'px monospace';
+  ctx.fillText(money(product.price), w/2, y);
+  y += priceSize + 8;
+  ctx.fillStyle = '#555555';
+  ctx.font = coSize + 'px sans-serif';
+  ctx.fillText(settings.name, w/2, y);
+  return out;
+}
+function truncateForCanvas(ctx, text, maxWidth){
+  if(ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while(t.length>1 && ctx.measureText(t+'…').width > maxWidth) t = t.slice(0,-1);
+  return t+'…';
+}
+function buildLabelSheetImage(items){
+  const cells = items.map(buildLabelImage);
+  const cols = Math.min(3, cells.length) || 1;
+  const cellW = Math.max(...cells.map(c=>c.width)) + 14;
+  const cellH = Math.max(...cells.map(c=>c.height)) + 14;
+  const rows = Math.ceil(cells.length/cols);
+  const out = document.createElement('canvas');
+  out.width = cellW*cols; out.height = cellH*rows;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,out.width,out.height);
+  cells.forEach((c,i)=>{
+    const col = i%cols, row = Math.floor(i/cols);
+    ctx.drawImage(c, col*cellW + (cellW-c.width)/2, row*cellH + (cellH-c.height)/2);
+  });
+  return out;
+}
+function downloadCanvasAsPng(canvas, filename){
+  canvas.toBlob(function(blob){
+    if(!blob){ toast('ছবি তৈরি করা যায়নি'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, 'image/png');
+}
+
+/* ---- সম্পূর্ণ PDF (কোনো লাইব্রেরি ছাড়াই) — ক্যানভাসের ছবিটাকে সরাসরি একটা প্রকৃত, খোলা/প্রিন্ট
+   করার মতো PDF ফাইলে বসিয়ে দেয়। কোনো ইন্টারনেট/CDN লাগে না, তাই অফলাইনেও কাজ করে। ---- */
+function pdfAsciiBytes(str){
+  const arr = new Uint8Array(str.length);
+  for(let i=0;i<str.length;i++) arr[i] = str.charCodeAt(i) & 0xFF;
+  return arr;
+}
+function pdfDataUrlToBytes(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+function pdfConcatBytes(arrays){
+  let total = 0;
+  arrays.forEach(a=>total+=a.length);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  arrays.forEach(a=>{ out.set(a, offset); offset += a.length; });
+  return out;
+}
+function canvasToPdfBytes(canvas, quality){
+  const dataUrl = canvas.toDataURL('image/jpeg', quality || 0.92);
+  const jpegBytes = pdfDataUrlToBytes(dataUrl);
+  const wPx = canvas.width, hPx = canvas.height;
+  const scale = 0.75; // px(96dpi) -> pt(72dpi)
+  const pageW = (wPx*scale).toFixed(2), pageH = (hPx*scale).toFixed(2);
+
+  const chunks = [];
+  const offsets = [];
+  let pos = 0;
+  function addChunk(bytesOrStr){
+    const b = (typeof bytesOrStr === 'string') ? pdfAsciiBytes(bytesOrStr) : bytesOrStr;
+    chunks.push(b);
+    pos += b.length;
+  }
+  function addObject(bytesOrStr){ offsets.push(pos); addChunk(bytesOrStr); }
+
+  addChunk("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  addObject("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  addObject("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+  addObject(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+
+  offsets.push(pos);
+  addChunk(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${wPx} /Height ${hPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+  addChunk(jpegBytes);
+  addChunk("\nendstream\nendobj\n");
+
+  const content = `q ${pageW} 0 0 ${pageH} 0 0 cm /Im0 Do Q`;
+  offsets.push(pos);
+  addChunk(`5 0 obj\n<< /Length ${content.length} >>\nstream\n`);
+  addChunk(content);
+  addChunk("\nendstream\nendobj\n");
+
+  const xrefStart = pos;
+  let xref = `xref\n0 ${offsets.length+1}\n0000000000 65535 f \n`;
+  offsets.forEach(off=>{ xref += String(off).padStart(10,'0') + " 00000 n \n"; });
+  addChunk(xref);
+  addChunk(`trailer\n<< /Size ${offsets.length+1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+
+  return pdfConcatBytes(chunks);
+}
+function downloadCanvasAsPdf(canvas, filename){
+  try{
+    const bytes = canvasToPdfBytes(canvas, 0.92);
+    const blob = new Blob([bytes], {type:'application/pdf'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }catch(e){ console.error(e); toast('PDF তৈরি করতে সমস্যা হয়েছে'); }
+}
+
+function downloadLabelsAsImage(items, filename){
+  if(!items.length){ toast('ডাউনলোড করার মতো কোনো লেবেল নেই'); return; }
+  try{
+    const canvas = buildLabelSheetImage(items);
+    downloadCanvasAsPng(canvas, filename);
+  }catch(e){ console.error(e); toast('ছবি তৈরি করতে সমস্যা হয়েছে'); }
+}
+function downloadLabelsAsPdf(items, filename){
+  if(!items.length){ toast('PDF করার মতো কোনো লেবেল নেই'); return; }
+  try{
+    const canvas = buildLabelSheetImage(items);
+    downloadCanvasAsPdf(canvas, filename);
+  }catch(e){ console.error(e); toast('PDF তৈরি করতে সমস্যা হয়েছে'); }
+}
+function downloadLabelSheetImage(){
+  downloadLabelsAsImage(labelSheetItems, 'barcode-labels_' + Date.now() + '.png');
+}
+function downloadLabelSheetPdf(){
+  downloadLabelsAsPdf(labelSheetItems, 'barcode-labels_' + Date.now() + '.pdf');
+}
+function downloadJustAddedLabelImage(){
+  if(!lastAddedProduct){ toast('আগে একটি প্রোডাক্ট যোগ করুন'); return; }
+  const qty = Math.max(1, parseInt(document.getElementById('liveLabelQty').value)||1);
+  const items = [];
+  for(let i=0;i<qty;i++) items.push(lastAddedProduct);
+  downloadLabelsAsImage(items, 'barcode_' + lastAddedProduct.code + '.png');
+}
+function downloadJustAddedLabelPdf(){
+  if(!lastAddedProduct){ toast('আগে একটি প্রোডাক্ট যোগ করুন'); return; }
+  const qty = Math.max(1, parseInt(document.getElementById('liveLabelQty').value)||1);
+  const items = [];
+  for(let i=0;i<qty;i++) items.push(lastAddedProduct);
+  downloadLabelsAsPdf(items, 'barcode_' + lastAddedProduct.code + '.pdf');
+}
+
+/* ===================== SCANNER =====================
+   ক্যামেরা স্ক্যানার ব্রাউজারের নিজস্ব BarcodeDetector API ব্যবহার করে — কোনো এক্সটার্নাল
+   লাইব্রেরি বা ইন্টারনেট লাগে না। গুরুত্বপূর্ণ: ব্রাউজার নিরাপত্তা নিয়মে ক্যামেরা (getUserMedia)
+   শুধুমাত্র HTTPS অথবা localhost থেকে কাজ করে — ফাইলটি সরাসরি "file://" হিসেবে খুললে বা সাধারণ
+   http:// থেকে খুললে অনেক মোবাইল ব্রাউজারে ক্যামেরা পারমিশন প্রম্পটই আসে না (সেটিংসেও কিছু দেখাবে
+   না)। এটা এই অ্যাপের কোডের সমস্যা না, এটা ফোনের ব্রাউজারের নিরাপত্তা নীতি — নিচের নোটে সমাধান
+   দেওয়া আছে। */
+let scanStream = null;
+let scanning = false;
+let scanDetector = null;
+let scanTimerId = null;
+let lastScan = {code:null, time:0};
+let availableCameras = [];
+let currentCameraIndex = 0;
+
+function barcodeSupportNote(){
+  const box = document.getElementById('scanResult');
+  box.innerHTML = `<div class="scan-miss">
+    এই ব্রাউজার সরাসরি ক্যামেরা স্ক্যানিং সাপোর্ট করে না। Android-এ <b>Chrome</b> ব্রাউজার
+    ব্যবহার করলে এটি কাজ করবে। অথবা নিচে কোডটি ম্যানুয়ালি টাইপ করে "খুঁজুন" চাপুন।
+  </div>`;
+}
+
+function isProbablySecureForCamera(){
+  // ক্যামেরা কাজ করার জন্য: https:// অথবা http://localhost/127.0.0.1 হতে হবে।
+  const proto = location.protocol;
+  const host = location.hostname;
+  if(proto === 'https:') return true;
+  if((proto === 'http:') && (host === 'localhost' || host === '127.0.0.1')) return true;
+  return window.isSecureContext === true && proto !== 'file:';
+}
+
+function insecureContextNote(){
+  document.getElementById('scanResult').innerHTML = `<div class="scan-miss">
+    <b>ক্যামেরা চালু করা যাচ্ছে না — এটা কোডের সমস্যা না, ফোনের ব্রাউজারের নিরাপত্তা নিয়ম।</b><br><br>
+    ব্রাউজারের নিয়ম অনুযায়ী ক্যামেরা (getUserMedia) শুধু <b>HTTPS</b> ওয়েবসাইট অথবা
+    <b>localhost</b> থেকে কাজ করে। ফাইলটি সরাসরি ফোনে খুললে (file:// দিয়ে) অনেক ব্রাউজারে
+    ক্যামেরা পারমিশন প্রম্পটই আসে না — তাই সাইট সেটিংসে গিয়েও কিছু পাওয়া যায় না।<br><br>
+    <b>সমাধান:</b> এই ফাইলটি একটা ফ্রি HTTPS লিংকে রাখলেই ক্যামেরা কাজ করবে। যেমন —
+    ফোনের ব্রাউজারে <b>app.netlify.com/drop</b> ওপেন করে এই HTML ফাইলটা আপলোড/ড্র্যাগ করলেই
+    সাথে সাথে একটা https লিংক পাবেন — সেই লিংকটা মোবাইলে বুকমার্ক/হোমস্ক্রিনে যোগ করে নিন,
+    ক্যামেরা তখন থেকেই কাজ করবে। এই পদ্ধতিতে কোনো কোডিং বা কম্পিউটার লাগবে না।<br><br>
+    ততক্ষণে নিচে প্রোডাক্ট কোড ম্যানুয়ালি টাইপ করে "খুঁজুন" চাপলেও সব ফিচার ঠিকমতো কাজ করবে।
+  </div>`;
+}
+
+async function startScanner(){
+  const readerDiv = document.getElementById('reader');
+  readerDiv.innerHTML = '<video id="scanVideo" playsinline muted autoplay style="width:100%;border-radius:8px;background:#000"></video>';
+  const video = document.getElementById('scanVideo');
+
+  if(!isProbablySecureForCamera()){
+    insecureContextNote();
+    return;
+  }
+  if(!('BarcodeDetector' in window)){
+    barcodeSupportNote();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast('এই ব্রাউজারে ক্যামেরা এক্সেস সাপোর্ট নেই');
+    barcodeSupportNote();
+    return;
+  }
+  try{
+    scanDetector = new BarcodeDetector({formats:['code_128','code_39','ean_13','ean_8','upc_a','upc_e','qr_code']});
+  }catch(e){
+    try{ scanDetector = new BarcodeDetector(); }catch(e2){ barcodeSupportNote(); return; }
+  }
+
+  const gotStream = await openCameraStream();
+  if(!gotStream) return;
+
+  video.srcObject = scanStream;
+  await video.play().catch(()=>{});
+  scanning = true;
+  document.getElementById('scanStartBtn').style.display='none';
+  document.getElementById('scanStopBtn').style.display='inline-block';
+  readerDiv.classList.add('scanning');
+  refreshCameraSwitchButton();
+  scanLoop(video);
+}
+
+/* ব্যাক ক্যামেরা নিশ্চিতভাবে বেছে নেওয়ার চেষ্টা: প্রথমে exact environment, তারপর ideal,
+   তারপর ডিভাইস লিস্ট থেকে "back/rear" লেবেলযুক্ত ক্যামেরা, শেষে যেকোনো ক্যামেরা। */
+async function openCameraStream(deviceId){
+  const attempts = deviceId
+    ? [{ video: { deviceId: { exact: deviceId } } }]
+    : [
+        { video: { facingMode: { exact: 'environment' } } },
+        { video: { facingMode: { ideal: 'environment' } } },
+        { video: true }
+      ];
+  let lastErr = null;
+  for(const constraints of attempts){
+    try{
+      scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+      await refreshCameraList();
+      return true;
+    }catch(err){ lastErr = err; }
+  }
+  showCameraError(lastErr);
+  return false;
+}
+
+function showCameraError(err){
+  const name = err && err.name || '';
+  let msg;
+  if(name === 'NotAllowedError' || name === 'PermissionDeniedError'){
+    msg = 'ক্যামেরা পারমিশন দেওয়া হয়নি। ব্রাউজারের ঠিকানা বারের পাশে 🔒/ⓘ আইকনে চেপে ক্যামেরা "Allow" করে আবার চেষ্টা করুন।';
+  } else if(name === 'NotFoundError' || name === 'DevicesNotFoundError'){
+    msg = 'এই ডিভাইসে কোনো ক্যামেরা খুঁজে পাওয়া যায়নি।';
+  } else if(name === 'NotReadableError' || name === 'TrackStartError'){
+    msg = 'ক্যামেরাটি অন্য একটি অ্যাপ ব্যবহার করছে। অন্য ক্যামেরা অ্যাপ বন্ধ করে আবার চেষ্টা করুন।';
+  } else {
+    msg = 'ক্যামেরা চালু করা যায়নি' + (err&&err.message? (' (' + escapeHtml(err.message) + ')') : '') + '।';
+  }
+  document.getElementById('scanResult').innerHTML = `<div class="scan-miss">${msg}</div>`;
+}
+
+async function refreshCameraList(){
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    availableCameras = devices.filter(d=>d.kind==='videoinput');
+  }catch(e){ availableCameras = []; }
+}
+
+function refreshCameraSwitchButton(){
+  const btn = document.getElementById('switchCameraBtn');
+  if(!btn) return;
+  btn.style.display = (availableCameras.length > 1) ? 'inline-block' : 'none';
+}
+
+async function switchCamera(){
+  if(availableCameras.length < 2) return;
+  currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+  if(scanStream) scanStream.getTracks().forEach(t=>t.stop());
+  const video = document.getElementById('scanVideo');
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: availableCameras[currentCameraIndex].deviceId } } });
+    if(video){ video.srcObject = scanStream; await video.play().catch(()=>{}); }
+  }catch(e){ showCameraError(e); }
+}
+
+async function scanLoop(video){
+  if(!scanning) return;
+  try{
+    const codes = await scanDetector.detect(video);
+    if(codes && codes.length && codes[0].rawValue){
+      onScanSuccess(codes[0].rawValue);
+    }
+  }catch(e){ /* ignore transient decode errors */ }
+  scanTimerId = setTimeout(()=>scanLoop(video), 350);
+}
+
+function stopScanner(){
+  scanning = false;
+  if(scanTimerId) clearTimeout(scanTimerId);
+  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream = null; }
+  document.getElementById('scanStartBtn').style.display='inline-block';
+  document.getElementById('scanStopBtn').style.display='none';
+  const readerDiv = document.getElementById('reader');
+  if(readerDiv) readerDiv.classList.remove('scanning');
+  const btn = document.getElementById('switchCameraBtn');
+  if(btn) btn.style.display='none';
+}
+
+function onScanSuccess(decodedText){
+  const now = Date.now();
+  if(decodedText===lastScan.code && now-lastScan.time < 2500) return; // debounce duplicate
+  lastScan = {code:decodedText, time:now};
+  handleScannedCode(decodedText);
+  if(navigator.vibrate) navigator.vibrate(80);
+}
+function manualLookup(){
+  const v = document.getElementById('manualCode').value.trim();
+  if(!v) return;
+  handleScannedCode(v);
+}
+function handleScannedCode(code){
+  const p = findProduct(code);
+  const box = document.getElementById('scanResult');
+  if(p){
+    box.innerHTML = `<div class="scan-hit">
+      <div style="font-weight:800;font-size:1.05rem">${escapeHtml(p.name)}</div>
+      <div class="badge">${escapeHtml(p.code)}</div>
+      <div style="font-family:var(--mono);font-size:1.2rem;color:var(--primary);margin-top:4px">${money(p.price)}</div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" onclick="addToCart('${p.id}')">বিলে যোগ করুন</button></div>
+    </div>`;
+  } else {
+    box.innerHTML = `<div class="scan-miss">কোড "${escapeHtml(code)}" এর সাথে মিলে এমন কোনো প্রোডাক্ট পাওয়া যায়নি।</div>`;
+  }
+}
+
+/* ===================== BILLING / CART ===================== */
+function addToCart(productId){
+  const p = products.find(x=>x.id===productId);
+  if(!p) return;
+  const existing = cart.find(c=>c.code===p.code);
+  if(existing) existing.qty += 1;
+  else cart.push({code:p.code, name:p.name, price:p.price, qty:1});
+  renderCart();
+  toast(p.name + ' কার্টে যোগ হয়েছে');
+}
+function billAddByQuery(){
+  const v = document.getElementById('billSearch').value.trim();
+  if(!v) return;
+  const p = findProduct(v);
+  if(!p){ toast('প্রোডাক্ট পাওয়া যায়নি'); return; }
+  addToCart(p.id);
+  document.getElementById('billSearch').value='';
+}
+function changeQty(code, delta){
+  const item = cart.find(c=>c.code===code);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty<=0) cart = cart.filter(c=>c.code!==code);
+  renderCart();
+}
+function removeFromCart(code){ cart = cart.filter(c=>c.code!==code); renderCart(); }
+function clearCart(){ cart=[]; renderCart(); }
+
+function renderCart(){
+  const list = document.getElementById('cartList');
+  document.getElementById('cartEmpty').style.display = cart.length? 'none':'block';
+  document.getElementById('cartTotals').style.display = cart.length? 'block':'none';
+  list.innerHTML = cart.map(c=>`
+    <div class="cart-row">
+      <div class="ci-name">${escapeHtml(c.name)}<small>${escapeHtml(c.code)} · ${money(c.price)}</small></div>
+      <div class="qty-ctrl">
+        <button onclick="changeQty('${c.code}',-1)">−</button>
+        <span>${c.qty}</span>
+        <button onclick="changeQty('${c.code}',1)">+</button>
+      </div>
+      <div class="ci-line-total">${money(c.price*c.qty)}</div>
+      <button class="btn btn-danger btn-sm" onclick="removeFromCart('${c.code}')">×</button>
+    </div>`).join('');
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const discount = parseFloat(document.getElementById('tDiscount')?.value)||0;
+  const grand = Math.max(0, subtotal-discount);
+  document.getElementById('tSubtotal').textContent = money(subtotal);
+  document.getElementById('tGrand').textContent = money(grand);
+}
+
+let lastFinalizedSale = null;
+
+function finalizeAndPrintReceipt(){
+  if(!cart.length){ toast('কার্ট খালি'); return; }
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const discount = parseFloat(document.getElementById('tDiscount').value)||0;
+  const grand = Math.max(0, subtotal-discount);
+  const custName = document.getElementById('custName').value.trim();
+  const sale = {
+    id: 'INV' + Date.now(),
+    date: new Date().toISOString(),
+    customer: custName,
+    items: cart.map(c=>({...c})),
+    subtotal, discount, total: grand
+  };
+  sales.push(sale);
+  saveSales(sales);
+  lastFinalizedSale = sale;
+  downloadReceiptPdf(sale);
+  renderDashboard();
+  cart=[]; document.getElementById('custName').value=''; document.getElementById('tDiscount').value=0;
+  renderCart();
+  toast('মেমো সেভ হয়েছে — এখন চাইলে "তাৎক্ষণিক প্রিন্ট"ও করতে পারেন');
+}
+
+function instantPrintReceipt(){
+  if(!lastFinalizedSale){ toast('আগে "মেমো সম্পন্ন করুন" বাটনে চাপুন'); return; }
+  renderReceiptPrintArea(lastFinalizedSale);
+  try{ window.print(); }catch(e){ toast('এই ব্রাউজারে প্রিন্ট ডায়ালগ খোলা যায়নি — PDF ফাইলটা ব্যবহার করুন'); }
+}
+
+function renderReceiptPrintArea(sale){
+  const printArea = document.getElementById('printArea');
+  const dt = new Date(sale.date);
+  const dateStr = dt.toLocaleDateString('bn-BD') + ' ' + dt.toLocaleTimeString('bn-BD');
+  let rows = sale.items.map(it=>`
+    <tr>
+      <td colspan="3">${escapeHtml(it.name)}</td>
+    </tr>
+    <tr>
+      <td>${it.qty} × ${money(it.price)}</td><td></td><td style="text-align:right">${money(it.price*it.qty)}</td>
+    </tr>`).join('');
+  printArea.innerHTML = `
+    <div class="receipt">
+      <h3>${escapeHtml(settings.name)}</h3>
+      <div class="ctr">${escapeHtml(settings.mobile||'')}${settings.mobile&&settings.email?' · ':''}${escapeHtml(settings.email||'')}</div>
+      <hr>
+      <div>ইনভয়েস: ${sale.id}</div>
+      <div>তারিখ: ${dateStr}</div>
+      ${sale.customer?`<div>কাস্টমার: ${escapeHtml(sale.customer)}</div>`:''}
+      <hr>
+      <table>${rows}</table>
+      <hr>
+      <table>
+        <tr><td>সাবটোটাল</td><td></td><td style="text-align:right">${money(sale.subtotal)}</td></tr>
+        <tr><td>ডিসকাউন্ট</td><td></td><td style="text-align:right">${money(sale.discount)}</td></tr>
+        <tr class="rtot"><td>সর্বমোট</td><td></td><td style="text-align:right">${money(sale.total)}</td></tr>
+      </table>
+      <hr>
+      <div class="ctr">${escapeHtml(settings.footer||'কেনাকাটার জন্য ধন্যবাদ!')}</div>
+    </div>`;
+}
+
+/* ---- মেমো ছবি (PNG) হিসেবে ডাউনলোড — window.print() কাজ না করলেও এটা সবসময় কাজ করবে ---- */
+function buildReceiptImage(sale){
+  const dt = new Date(sale.date);
+  const dateStr = dt.toLocaleDateString('bn-BD') + ' ' + dt.toLocaleTimeString('bn-BD');
+  const W = 380, pad = 16;
+  const lines = [];
+  lines.push({t:settings.name, size:17, bold:true, align:'center'});
+  const contact = [settings.mobile, settings.email].filter(Boolean).join(' · ');
+  if(contact) lines.push({t:contact, size:11, align:'center'});
+  lines.push({sep:true});
+  lines.push({t:'ইনভয়েস: '+sale.id, size:12});
+  lines.push({t:'তারিখ: '+dateStr, size:12});
+  if(sale.customer) lines.push({t:'কাস্টমার: '+sale.customer, size:12});
+  lines.push({sep:true});
+  sale.items.forEach(it=>{
+    lines.push({t:it.name, size:12, bold:true});
+    lines.push({two:[it.qty+' × '+money(it.price), money(it.price*it.qty)], size:12});
+  });
+  lines.push({sep:true});
+  lines.push({two:['সাবটোটাল', money(sale.subtotal)], size:12});
+  lines.push({two:['ডিসকাউন্ট', money(sale.discount)], size:12});
+  lines.push({two:['সর্বমোট', money(sale.total)], size:15, bold:true});
+  lines.push({sep:true});
+  lines.push({t:settings.footer||'কেনাকাটার জন্য ধন্যবাদ!', size:11, align:'center'});
+
+  let h = pad*2;
+  lines.forEach(l=>{ h += l.sep ? 18 : (l.size||12)+8; });
+
+  const out = document.createElement('canvas');
+  out.width = W; out.height = h;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,h);
+  ctx.fillStyle = '#000000';
+  let y = pad;
+  lines.forEach(l=>{
+    if(l.sep){
+      y += 8;
+      ctx.strokeStyle = '#999999'; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
+      ctx.setLineDash([]);
+      y += 10;
+      return;
+    }
+    ctx.font = (l.bold?'bold ':'') + (l.size||12) + 'px monospace';
+    y += (l.size||12);
+    if(l.two){
+      ctx.textAlign = 'left';
+      ctx.fillText(truncateForCanvas(ctx, l.two[0], W*0.55), pad, y);
+      ctx.textAlign = 'right';
+      ctx.fillText(l.two[1], W-pad, y);
+    } else {
+      ctx.textAlign = l.align||'left';
+      const x = l.align==='center' ? W/2 : pad;
+      ctx.fillText(truncateForCanvas(ctx, l.t, W-2*pad), x, y);
+    }
+    y += 8;
+  });
+  return out;
+}
+function downloadReceiptImage(sale){
+  try{
+    const canvas = buildReceiptImage(sale);
+    downloadCanvasAsPng(canvas, 'receipt_' + sale.id + '.png');
+  }catch(e){ console.error(e); toast('মেমোর ছবি তৈরি করতে সমস্যা হয়েছে'); }
+}
+function downloadReceiptPdf(sale){
+  try{
+    const canvas = buildReceiptImage(sale);
+    downloadCanvasAsPdf(canvas, 'receipt_' + sale.id + '.pdf');
+  }catch(e){ console.error(e); toast('মেমোর PDF তৈরি করতে সমস্যা হয়েছে'); }
+}
+
+/* ===================== EXCEL EXPORT =====================
+   কোনো CDN লাইব্রেরি ছাড়াই সরাসরি Excel-এ খোলার মতো একটি ফাইল (SpreadsheetML XML) তৈরি করা হয়,
+   তাই এটিও সম্পূর্ণ অফলাইনে কাজ করে। ফাইলটি ডাবল-ক্লিক করলে সরাসরি Excel/Google Sheets-এ খোলে। */
+function xmlEscape(s){
+  return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function buildSpreadsheetXML(sheetName, headers, rows){
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n';
+  xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+  xml += '<Worksheet ss:Name="' + xmlEscape(sheetName) + '"><Table>\n<Row>';
+  headers.forEach(h=>{ xml += '<Cell><Data ss:Type="String">' + xmlEscape(h) + '</Data></Cell>'; });
+  xml += '</Row>\n';
+  rows.forEach(r=>{
+    xml += '<Row>';
+    r.forEach(v=>{
+      const isNum = typeof v === 'number' && isFinite(v);
+      xml += '<Cell><Data ss:Type="' + (isNum?'Number':'String') + '">' + xmlEscape(isNum? v : v) + '</Data></Cell>';
+    });
+    xml += '</Row>\n';
+  });
+  xml += '</Table></Worksheet></Workbook>';
+  return xml;
+}
+function downloadExcelFile(filename, xmlContent){
+  const blob = new Blob(["\ufeff" + xmlContent], {type:'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function exportProductsExcel(){
+  if(!products.length){ toast('কোনো প্রোডাক্ট নেই'); return; }
+  const rows = products.map(p=>[p.name, p.code, p.price, p.category||'']);
+  const xml = buildSpreadsheetXML('Products', ['নাম','কোড','দাম','ক্যাটাগরি'], rows);
+  downloadExcelFile('products_' + Date.now() + '.xls', xml);
+}
+function exportSalesExcel(){
+  if(!sales.length){ toast('কোনো বিক্রয় ইতিহাস নেই'); return; }
+  const rows = [];
+  sales.forEach(s=>{
+    s.items.forEach(it=>{
+      rows.push([s.id, new Date(s.date).toLocaleString('bn-BD'), s.customer||'', it.name, it.code, it.qty, it.price, it.price*it.qty, s.total]);
+    });
+  });
+  const xml = buildSpreadsheetXML('Sales', ['ইনভয়েস','তারিখ','কাস্টমার','প্রোডাক্ট','কোড','পরিমাণ','দাম','লাইন টোটাল','বিলের সর্বমোট'], rows);
+  downloadExcelFile('sales_' + Date.now() + '.xls', xml);
+}
+function clearSalesHistory(){
+  if(!confirm('সব বিক্রয় ইতিহাস মুছে ফেলতে চান?')) return;
+  sales=[]; saveSales(sales); renderDashboard(); toast('বিক্রয় ইতিহাস মুছে ফেলা হয়েছে');
+}
+
+/* ===================== BACKUP / RESTORE ===================== */
+function downloadJsonBackup(){
+  const payload = { products, settings, sales, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mbt_pos_backup_' + Date.now() + '.json';
+  a.click();
+}
+function restoreJsonBackup(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.products) { products=data.products; saveProducts(products); }
+      if(data.settings) { settings=data.settings; saveSettingsObj(settings); }
+      if(data.sales) { sales=data.sales; saveSales(sales); }
+      applyBrandingToHeader(); fillSettingsForm(); renderProductTable(); renderDashboard();
+      toast('ব্যাকআপ থেকে রিস্টোর সম্পন্ন হয়েছে');
+    }catch(err){ toast('ফাইলটি সঠিক নয়'); }
+  };
+  reader.readAsText(file);
+}
+function factoryReset(){
+  if(!confirm('সম্পূর্ণ ডেটা (প্রোডাক্ট, সেটিংস, বিক্রয়) মুছে যাবে। নিশ্চিত?')) return;
+  localStorage.removeItem(LS_KEYS.products);
+  localStorage.removeItem(LS_KEYS.settings);
+  localStorage.removeItem(LS_KEYS.sales);
+  products=[]; sales=[]; settings=loadSettings();
+  applyBrandingToHeader(); fillSettingsForm(); renderProductTable(); renderDashboard();
+  toast('সব ডেটা মুছে ফেলা হয়েছে');
+}
+
+/* ===================== CLOCK ===================== */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clockBadge').textContent = d.toLocaleDateString('bn-BD') + ' ' + d.toLocaleTimeString('bn-BD');
+}
+setInterval(tickClock, 1000);
+
+/* ===================== INIT ===================== */
+applyBrandingToHeader();
+fillSettingsForm();
+renderDashboard();
+renderProductTable();
+renderLabelSheet();
+tickClock();
+
+(function(){
+  const note = document.getElementById('scannerSupportNote');
+  if(!note) return;
+  if(!isProbablySecureForCamera()){
+    note.innerHTML = '⚠️ এই ফাইলটি বর্তমানে যেভাবে খোলা আছে (file:// বা http://), তাতে ফোনের ব্রাউজার ক্যামেরা এক্সেস ব্লক করবে — এটা একটা নিরাপত্তা নিয়ম। "স্ক্যানার চালু করুন" চাপলে বিস্তারিত সমাধান দেখাবে।';
+  } else if(!('BarcodeDetector' in window)){
+    note.innerHTML = '⚠️ এই ব্রাউজারে নেটিভ ক্যামেরা স্ক্যানার নেই — Android-এ <b>Chrome</b> ব্যবহার করুন, অথবা নিচে কোড ম্যানুয়ালি লিখুন।';
+  } else {
+    note.textContent = 'এই ব্রাউজারে ক্যামেরা স্ক্যানার সাপোর্টেড।';
+  }
+})();
+</script>
+</body>
+</html>
